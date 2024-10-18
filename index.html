@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+</head>
+
+    <body>
+    <div id="myDIV" class="header">
+      <h2 style="margin:5px"></h2>
+    </div>
+    
+    <div id="myDIV" class="inlineblock">
+      <h2 class="entry" style="margin:5px">Welcome!</h2>
+      <h2 class="entry2" style="margin:5px">here's the reminders for today</h2>
+
+      <div class="card-image">
+        <img src="" alt="" class="card-img">
+      </div>
+
+    </div>
+    
+    <div class="post-bar">
+      <form id="task-form">
+        <label class="create_task">New task</label>
+        <h1 for="task-name" class="taskName-head">Task Name:</h1>
+        <textarea type="text" id="task-name" name="task-name" placeholder="Task name" maxlength="20"></textarea>
+        <label for="task-category" class="taskCat-head">Category:</label>
+        <select id="task-category" name="task-category" placeholder="Category">
+          <option value="Studies">Study</option>
+          <option value="Playtime">Playtime</option>
+          <option value="Event">Event</option>  
+          <option value="Maintennce">Maintennce</option>
+        </select>
+        <label for="task-date" class="taskDate-head">Date:</label>
+        <textarea type="text" id="task-date" name="task-date" placeholder="dd/mm" maxlength="5"></textarea>
+
+        <button type="button" class="submit" id="submit">Add Task</button>
+      
+      </form>
+      
+    </div>
+    
+    <div class="container">
+      <ul id="myUL">
+      </ul>
+    </div>
+    
+
+    </body>
+    
+    <script src="index.js"></script>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+      import { getDatabase, ref, set, onValue  } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+    
+      const firebaseConfig = {
+        apiKey: "AIzaSyCMaHEMf9t1Ak0-ylFa3ukNtIWBOGLJFVo",
+        authDomain: "todoxle-6471f.firebaseapp.com",
+        projectId: "todoxle-6471f",
+        storageBucket: "todoxle-6471f.appspot.com",
+        messagingSenderId: "332291340984",
+        appId: "1:332291340984:web:3aa3944018c3d8d5b7524d",
+        measurementId: "G-6B9RNF9KHK"
+      };
+    
+      
+      const app = initializeApp(firebaseConfig);
+    
+      
+      const db = getDatabase(app);
+    
+      document.getElementById("submit").addEventListener('click', function(e){
+        e.preventDefault();
+
+        const taskName = document.getElementById("task-name").value.trim();
+        const taskDate = document.getElementById("task-date").value.trim();
+
+        if (!taskName || !taskDate) {
+            alert("Please input something in Task name and Date. :>");
+            return; 
+        }
+        
+        set(ref(db, 'task/' + document.getElementById("task-name").value), {
+            TaskName: document.getElementById("task-name").value,
+            TaskCategory: document.getElementById("task-category").value,
+            TaskDate: document.getElementById("task-date").value
+        });
+        alert("Task added");
+        document.getElementById('task-form').reset();
+      });
+
+      function loadTasks() {
+        const tasksRef = ref(db, 'task/');
+        onValue(tasksRef, (snapshot) => {
+          const tasks = snapshot.val();
+          const taskList = document.getElementById('myUL');
+          taskList.innerHTML = '';
+    
+          for (let key in tasks) {
+            const taskData = tasks[key];
+            const taskName = taskData.TaskName;
+            const taskCategory = taskData.TaskCategory;
+            const taskDate = taskData.TaskDate;
+    
+            const taskContainer = document.createElement('li');
+            taskContainer.className = 'task-container';
+    
+            const taskNameElem = document.createElement('div');
+            taskNameElem.className = 'task-name';
+            taskNameElem.textContent = taskName;
+    
+            const taskCategoryElem = document.createElement('div');
+            taskCategoryElem.className = 'task-category';
+            taskCategoryElem.textContent = taskCategory;
+    
+            const taskDateElem = document.createElement('div');
+            taskDateElem.className = 'task-date';
+            taskDateElem.textContent = taskDate;
+    
+            const taskDelButton = document.createElement('button');
+            taskDelButton.className = 'delete-button';
+            taskDelButton.textContent = 'Done';
+            taskDelButton.onclick = function () {
+              removeTask(key);
+              taskContainer.remove();
+            };
+    
+            taskContainer.appendChild(taskNameElem);
+            taskContainer.appendChild(taskCategoryElem);
+            taskContainer.appendChild(taskDateElem);
+            taskContainer.appendChild(taskDelButton);
+    
+            taskList.appendChild(taskContainer);
+          }
+        });
+      }
+    
+      function removeTask(taskId) {
+        const taskRef = ref(db, 'task/' + taskId);
+        set(taskRef, null);
+      }
+    
+      loadTasks();
+    </script>
+    </html>
